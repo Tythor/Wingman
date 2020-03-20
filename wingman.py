@@ -10,7 +10,7 @@ import os
 class Wingman(discord.Client):
     def __init__(self):
         self.ready = False
-        self.blocked = False
+        self.active = False
         super().__init__()
         print("Starting...")
 
@@ -19,20 +19,24 @@ class Wingman(discord.Client):
         super().run(token, bot=False)
 
     async def roll(self, message, command):
-        print("Rolling for " + message.author.name)
-        await message.channel.send("Have no fear, The Waifu Wingman is here to grant you more rolls!")
+        if not self.active:
+            self.active = True
+            print("Rolling for " + message.author.name)
+            await message.channel.send("Have no fear, The Waifu Wingman is here to grant you more rolls!")
 
-        msg = None
-        time.sleep(1)
+            msg = None
+            time.sleep(1)
 
-        while True:
-            if msg is not None and "the roulette is limited" in msg.content:
-                await message.channel.send("It appears that I am out of rolls. Please try again later.")
-                break
-            else:
-                await message.channel.send(command)
-                time.sleep(random.randint(1, 2))
-            msg = await self.wait_for("message")
+            while True:
+                if msg is not None and "the roulette is limited" in msg.content:
+                    await message.channel.send("It appears that I am out of rolls. Please try again later.")
+                    break
+                else:
+                    await message.channel.send(command)
+                    time.sleep(random.randint(1, 2))
+                msg = await self.wait_for("message")
+            self.active = False
+
 
     # @command()
     # async def wingman(self, message, arg):
