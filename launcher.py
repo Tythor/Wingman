@@ -1,5 +1,4 @@
-from wingman import Wingman
+from MainWingman import MainWingman
 
 if __name__ == "__main__":
-    bot = Wingman()
-    bot.run()
+    bot = MainWingman()

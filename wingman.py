@@ -28,13 +28,14 @@ class Wingman(discord.Client):
             time.sleep(1)
 
             while True:
-                if msg is not None and "the roulette is limited" in msg.content:
+                keyword = self.user.name + ", the roulette is limited"
+                if msg is not None and keyword in msg.content:
                     await message.channel.send("It appears that I am out of rolls. Please try again later.")
                     break
                 else:
                     await message.channel.send(command)
+                    msg = await self.wait_for("message")
                     time.sleep(random.randint(1, 2))
-                msg = await self.wait_for("message")
             self.active = False
 
 
