@@ -1,9 +1,13 @@
-import asyncio
 import discord
 
-import time
-import random
+import asyncio
 import os
+
+import time
+import datetime
+import math
+import random
+
 
 from ExtraWingman import ExtraWingman
 
@@ -16,6 +20,7 @@ class MainWingman(discord.Client):
     active = False
     is_available = True
 
+    timer_time = None
     extra_wingmen = []
 
 
@@ -63,8 +68,9 @@ class MainWingman(discord.Client):
         while True and self.is_available:
             limited = "**" + self.user.name + "**, the roulette is limited"
             disabled = "Command DISABLED"
+            restricted = "Command RESTRICTED"
 
-            if disabled in message.content:
+            if disabled in message.content or restricted in message.content:
                 return
 
             if limited in message.content:
@@ -97,7 +103,7 @@ class MainWingman(discord.Client):
             for extra_wingman in self.extra_wingmen:
                 if extra_wingman.is_available:
                     available_wingmen += 1
-            message = await message.channel.send("Successfully rolled for **" + author + "**! There are `" + str(available_wingmen) + "` more wingmen available. If you would like me to continue rolling, please react to this message!")
+            message = await message.channel.send("Successfully rolled for **" + author + "**! There are **" + str(available_wingmen) + "** more wingmen available. If you would like me to continue rolling, please react to this message!")
 
             def check(reaction, user):
                 return str(reaction.emoji) == "💖" and reaction.message.content == message.content and user.name == author
@@ -125,12 +131,15 @@ class MainWingman(discord.Client):
 
         if not helped:
             time.sleep(1)
-            await message.channel.send("Sorry, looks like all of the wingmen are unavailable 💔. Please try again later.")
+            minutes_left = self.timer_time - datetime.datetime.now()
+            await message.channel.send("Sorry, looks like all of the wingmen are unavailable 💔. Please try again in **" + str(math.ceil(minutes_left.seconds / 60)) + "** minutes.")
 
     async def set_timer(self, message):
         index = message.content.find("min left")
         minutes = int(''.join(filter(str.isdigit, message.content[index - 5:index])))
         seconds = time.strftime("%S", time.localtime())
+
+        self.timer_time = datetime.datetime.now() + datetime.timedelta(minutes=minutes)
 
         print(self.prefix + "Unavailable for " + str(minutes) + " minutes")
 

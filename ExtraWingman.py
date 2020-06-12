@@ -1,9 +1,10 @@
-import asyncio
 import discord
+
+import asyncio
+import os
 
 import time
 import random
-import os
 
 
 class ExtraWingman(discord.Client):
@@ -14,6 +15,7 @@ class ExtraWingman(discord.Client):
     active = False
     is_available = True
 
+    timer_time = None
     latest_message = None
 
     def __init__(self, number):
@@ -31,7 +33,7 @@ class ExtraWingman(discord.Client):
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
 
     async def on_message(self, message):
-        if "$wingman $w" in message.content:
+        if message.content == "$wingman $w" or message.content == "$wingman $h" or message.content == "$wingman $m":
             self.latest_message = message
 
     async def roll(self, command):
@@ -86,7 +88,7 @@ class ExtraWingman(discord.Client):
             if available_wingmen > 0:
                 reply += " There are **" + str(available_wingmen) + "** more wingmen available. If you would like me to continue rolling, please react to this message!"
             else:
-                reply += " There are no more wingmen available 💔."
+                reply += " There are no more wingmen available 💔. Please try again in later."
             message = await message.channel.send(reply)
 
             if available_wingmen > 0:
@@ -101,6 +103,7 @@ class ExtraWingman(discord.Client):
                 except asyncio.TimeoutError:
                     print(self.prefix + "Reaction timed out")
 
+
         self.active = False
         return success
 
@@ -112,6 +115,6 @@ class ExtraWingman(discord.Client):
         print(self.prefix + "Unavailable for " + str(minutes) + " minutes")
 
         await asyncio.sleep(minutes * 60 - int(seconds))
-        print(self.prefix + " Now Available")
+        print(self.prefix + "Now Available")
         self.is_available = True
         await self.change_presence(status=discord.Status.online, activity=discord.Game("❤️"))
