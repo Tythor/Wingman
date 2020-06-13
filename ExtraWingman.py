@@ -15,7 +15,6 @@ class ExtraWingman(discord.Client):
     active = False
     is_available = True
 
-    timer_time = None
     latest_message = None
 
     def __init__(self, number):
@@ -54,6 +53,8 @@ class ExtraWingman(discord.Client):
 
             if limited in message.content:
                 self.is_available = False
+                author = self.latest_message.author.name
+
                 if not success:
                     author = "Unknown"
                     # reply = "Looks like you didn't actually get any rolls. Calling for backup..."

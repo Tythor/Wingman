@@ -8,7 +8,6 @@ import datetime
 import math
 import random
 
-
 from ExtraWingman import ExtraWingman
 
 
