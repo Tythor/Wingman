@@ -42,14 +42,63 @@ class MainWingman(discord.Client):
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
 
     async def on_message(self, message):
-        if not self.ready or self.active:
+        if not self.ready or self.active or message.author == self.user:
             return
-        if message.content == "$wingman $w":
-            await self.roll(message, "$w")
-        elif message.content == "$wingman $h":
-            await self.roll(message, "$h")
-        elif message.content == "$wingman $m":
-            await self.roll(message, "$m")
+        command = message.content[9:]
+        if (command == "$w" or command == "$h" or command == "$m"
+                or command == "$wg" or command == "$hg" or command == "$mg"
+                or command == "$wa" or command == "$ha" or command == "$ma"):
+            await self.roll(message, command)
+        if "$give" in command:
+            await self.give(message, command)
+
+    async def on_reaction_add(self, reaction, user):
+        if not reaction.message.embeds or "Mudamaid" in user.name or self.active:
+            return
+
+        self.active = True
+
+        def check(message):
+            return "married" in message.content
+
+        try:
+            await self.wait_for("message", timeout=2, check=check)
+        except asyncio.TimeoutError: # Claimed Unsuccessfully
+            message = reaction.message
+            waifu = message.embeds[0].author.name
+
+            print(self.prefix + "Attempting to claim " + waifu + " for " + user.name)
+
+            await reaction.message.add_reaction(reaction.emoji)
+
+            try:
+                await self.wait_for("message", timeout=2, check=check)
+            except asyncio.TimeoutError:  # Claimed Unsuccessfully
+                for extra_wingman in self.extra_wingmen:
+                    if await extra_wingman.claim(reaction, user):
+                        break
+            else: # Claimed Successfully
+                await message.channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
+        self.active = False
+
+    async def give(self, message, command):
+        time.sleep(1)
+
+        waifu = command[6:]
+        await message.channel.send("$give " + message.author.mention + " " + waifu)
+
+        def check(message):
+            return "Who" in message.content
+
+        try:
+            await self.wait_for("message", timeout=2, check=check)
+        except asyncio.TimeoutError: # Successful
+            print(self.prefix + "Offered " + waifu + " to " + message.author.name)
+        else: # Unsuccessful
+            await message.channel.send("$exit")
+            for extra_wingman in self.extra_wingmen:
+                if await extra_wingman.give(message, command):
+                    break
 
     async def roll(self, message, command):
         self.active = True
@@ -109,11 +158,12 @@ class MainWingman(discord.Client):
 
             try:
                 await message.add_reaction("💖")
-                reaction, user = await self.wait_for('reaction_add', timeout=15, check=check)
-                if check(reaction, user): # Reaction Success
-                    await self.call_help(message, command)
+                await self.wait_for("reaction_add", timeout=15, check=check)
             except asyncio.TimeoutError:
                 print(self.prefix + "Reaction timed out")
+            else: # Reaction Success
+                await self.call_help(message, command)
+
         else: # Call for Help
             await self.call_help(message, command)
 
@@ -135,7 +185,7 @@ class MainWingman(discord.Client):
 
     async def set_timer(self, message):
         index = message.content.find("min left")
-        minutes = int(''.join(filter(str.isdigit, message.content[index - 5:index])))
+        minutes = int("".join(filter(str.isdigit, message.content[index - 5:index])))
         seconds = time.strftime("%S", time.localtime())
 
         self.timer_time = datetime.datetime.now() + datetime.timedelta(minutes=minutes)

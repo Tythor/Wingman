@@ -16,6 +16,7 @@ class ExtraWingman(discord.Client):
     is_available = True
 
     latest_message = None
+    claim_message = None
 
     def __init__(self, number):
         self.prefix += str(number) + ": "
@@ -32,8 +33,55 @@ class ExtraWingman(discord.Client):
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
 
     async def on_message(self, message):
-        if message.content == "$wingman $w" or message.content == "$wingman $h" or message.content == "$wingman $m":
+        command = message.content[9:]
+        if (command == "$w" or command == "$h" or command == "$m"
+                or command == "$wg" or command == "$hg" or command == "$mg"
+                or command == "$wa" or command == "$ha" or command == "$ma"):
             self.latest_message = message
+
+        if self.latest_message is None:
+            self.latest_message = message
+
+    async def on_reaction_add(self, reaction, user):
+        if "TripleFury" in user.name:
+            self.claim_message = reaction.message
+
+    async def give(self, message, command):
+        time.sleep(1)
+
+        waifu = command[6:]
+        await self.latest_message.channel.send("$give " + message.author.mention + " " + waifu)
+
+        def check(message):
+            return "Who" in message.content
+
+        try:
+            await self.wait_for("message", timeout=2, check=check)
+        except asyncio.TimeoutError:  # Successful
+            print(self.prefix + "Offered " + waifu + " to " + message.author.name)
+            return True
+        else:  # Unsuccessful
+            await self.latest_message.channel.send("$exit")
+            return False
+
+    async def claim(self, reaction, user):
+        message = self.claim_message
+        waifu = message.embeds[0].author.name
+
+        print(self.prefix + "Attempting to claim " + waifu)
+
+        await message.add_reaction(reaction.emoji)
+
+        def check(message):
+            return "married" in message.content
+
+        try:
+            await self.wait_for("message", timeout=2, check=check)
+        except asyncio.TimeoutError:  # Claimed Unsuccessfully
+            return False
+        else: # Claimed Successfully
+            await message.channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
+            return True
 
     async def roll(self, command):
         self.active = True
@@ -98,19 +146,18 @@ class ExtraWingman(discord.Client):
 
                 try:
                     await message.add_reaction("💖")
-                    reaction, user = await self.wait_for('reaction_add', timeout=15, check=check)
-                    if check(reaction, user): # Reaction Success
-                        return False
+                    await self.wait_for("reaction_add", timeout=15, check=check)
                 except asyncio.TimeoutError:
                     print(self.prefix + "Reaction timed out")
-
+                else: # Reaction Success
+                    return False
 
         self.active = False
         return success
 
     async def set_timer(self, message):
         index = message.content.find("min left")
-        minutes = int(''.join(filter(str.isdigit, message.content[index - 5:index])))
+        minutes = int("".join(filter(str.isdigit, message.content[index - 5:index])))
         seconds = time.strftime("%S", time.localtime())
 
         print(self.prefix + "Unavailable for " + str(minutes) + " minutes")
