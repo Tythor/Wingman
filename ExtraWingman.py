@@ -49,11 +49,11 @@ class ExtraWingman(discord.Client):
         if "TripleFury" in user.name:
             self.claim_message = reaction.message
 
-    async def give(self, message, command):
+    async def give(self, user, command):
         time.sleep(1)
 
         waifu = command[6:]
-        await self.latest_message.channel.send("$give " + message.author.mention + " " + waifu)
+        await self.latest_message.channel.send("$give " + user.mention + " " + waifu)
 
         def check(message):
             return "Who" in message.content
@@ -61,7 +61,7 @@ class ExtraWingman(discord.Client):
         try:
             await self.wait_for("message", timeout=2, check=check)
         except asyncio.TimeoutError:  # Successful
-            print(self.prefix + "Offered " + waifu + " to " + message.author.name)
+            print(self.prefix + "Offered " + waifu + " to " + user.name)
             return True
         else:  # Unsuccessful
             await self.latest_message.channel.send("$exit")
@@ -84,7 +84,7 @@ class ExtraWingman(discord.Client):
             return False
         else: # Claimed Successfully
             await message.channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
-            await self.give(message, "$give " + waifu)
+            await self.give(user, "$give " + waifu)
             return True
 
     async def roll(self, command):

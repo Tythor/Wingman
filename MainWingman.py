@@ -44,14 +44,14 @@ class MainWingman(discord.Client):
     async def on_message(self, message):
         if not self.ready or self.active or message.author == self.user or not message.content[:8] == "$wingman":
             return
-        
+
         command = message.content[9:]
         if (command == "$w" or command == "$h" or command == "$m"
                 or command == "$wg" or command == "$hg" or command == "$mg"
                 or command == "$wa" or command == "$ha" or command == "$ma"):
             await self.roll(message, command)
         if "$give" in command:
-            await self.give(message, command)
+            await self.give(message, message.author, command)
 
     async def on_reaction_add(self, reaction, user):
         if not reaction.message.embeds or "Mudamaid" in user.name or self.active:
@@ -80,14 +80,14 @@ class MainWingman(discord.Client):
                         break
             else: # Claimed Successfully
                 await message.channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
-                await self.give(message, "$give " + waifu)
+                await self.give(message, user, "$give " + waifu)
         self.active = False
 
-    async def give(self, message, command):
+    async def give(self, message, user, command):
         time.sleep(1)
 
         waifu = command[6:]
-        await message.channel.send("$give " + message.author.mention + " " + waifu)
+        await message.channel.send("$give " + user.mention + " " + waifu)
 
         def check(message):
             return "Who" in message.content
@@ -95,11 +95,11 @@ class MainWingman(discord.Client):
         try:
             await self.wait_for("message", timeout=2, check=check)
         except asyncio.TimeoutError: # Successful
-            print(self.prefix + "Offered " + waifu + " to " + message.author.name)
+            print(self.prefix + "Offered " + waifu + " to " + user.name)
         else: # Unsuccessful
             await message.channel.send("$exit")
             for extra_wingman in self.extra_wingmen:
-                if await extra_wingman.give(message, command):
+                if await extra_wingman.give(user, command):
                     break
 
     async def roll(self, message, command):
