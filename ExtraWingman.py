@@ -33,6 +33,9 @@ class ExtraWingman(discord.Client):
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
 
     async def on_message(self, message):
+        if not self.ready or self.active or message.author == self.user or not message.content[:8] == "$wingman":
+            return
+
         command = message.content[9:]
         if (command == "$w" or command == "$h" or command == "$m"
                 or command == "$wg" or command == "$hg" or command == "$mg"
