@@ -90,7 +90,7 @@ class MainWingman(discord.Client):
         time.sleep(1)
 
         waifu = command[6:]
-        await message.channel.send("$give " + user.mention + " " + waifu)
+        msg = await message.channel.send("$give " + user.mention + " " + waifu)
 
         def check(message):
             return "Who" in message.content
@@ -100,8 +100,9 @@ class MainWingman(discord.Client):
         except asyncio.TimeoutError: # Successful
             print(self.prefix + "Offered " + waifu + " to " + user.name)
         else: # Unsuccessful
-            await message.channel.send("$exit")
+            await message.channel.send("$exit", delete_after=2)
             time.sleep(1)
+            await msg.delete()
 
             for extra_wingman in self.extra_wingmen:
                 if await extra_wingman.give(user, command):
@@ -139,12 +140,12 @@ class MainWingman(discord.Client):
                 break
 
             else:
-                await message.channel.send(command)
+                await message.channel.send(command, delete_after=2)
                 try:
                     message = await self.wait_for("message", timeout=5)
                 except asyncio.TimeoutError:
                     print(self.prefix + "Timed out, sending another roll...")
-                    await message.channel.send(command)
+                    await message.channel.send(command, delete_after=2)
 
                 time.sleep(random.randint(1, 2))
 
