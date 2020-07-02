@@ -79,6 +79,7 @@ class MainWingman(discord.Client):
                         break
             else: # Claimed Successfully
                 await message.channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
+                await self.give(message, "$give " + waifu)
         self.active = False
 
     async def give(self, message, command):

@@ -81,6 +81,7 @@ class ExtraWingman(discord.Client):
             return False
         else: # Claimed Successfully
             await message.channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
+            await self.give(message, "$give " + waifu)
             return True
 
     async def roll(self, command):
