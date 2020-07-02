@@ -54,7 +54,10 @@ class MainWingman(discord.Client):
             await self.give(message, message.author, command)
 
     async def on_reaction_add(self, reaction, user):
-        if not reaction.message.embeds or "Mudamaid" in user.name or self.active:
+        if not reaction.message.embeds or "Mudamaid" in user.name:
+            return
+
+        if not (reaction.emoji == "❤️" or reaction.emoji == "💖" or reaction.emoji == "💘" or reaction.emoji == "💓" or reaction.emoji == "💗" or reaction.emoji == "💕"):
             return
 
         self.active = True
@@ -98,6 +101,8 @@ class MainWingman(discord.Client):
             print(self.prefix + "Offered " + waifu + " to " + user.name)
         else: # Unsuccessful
             await message.channel.send("$exit")
+            time.sleep(1)
+
             for extra_wingman in self.extra_wingmen:
                 if await extra_wingman.give(user, command):
                     break

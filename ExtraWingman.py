@@ -33,7 +33,7 @@ class ExtraWingman(discord.Client):
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
 
     async def on_message(self, message):
-        if not self.ready or self.active or message.author == self.user or not message.content[:8] == "$wingman":
+        if message.author == self.user or not message.content[:8] == "$wingman":
             return
 
         command = message.content[9:]
@@ -65,6 +65,7 @@ class ExtraWingman(discord.Client):
             return True
         else:  # Unsuccessful
             await self.latest_message.channel.send("$exit")
+            time.sleep(1)
             return False
 
     async def claim(self, reaction, user):
