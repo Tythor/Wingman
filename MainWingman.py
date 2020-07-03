@@ -60,7 +60,9 @@ class MainWingman(discord.Client):
         if not (reaction.emoji == "❤️" or reaction.emoji == "💖" or reaction.emoji == "💘" or reaction.emoji == "💓" or reaction.emoji == "💗" or reaction.emoji == "💕"):
             return
 
-        self.active = True
+        for i in range(2, 7):
+            if user.name == "TripleFury" + str(i):
+                return
 
         def check(message):
             return "married" in message.content
@@ -73,7 +75,7 @@ class MainWingman(discord.Client):
 
             print(self.prefix + "Attempting to claim " + waifu + " for " + user.name)
 
-            await reaction.message.add_reaction(reaction.emoji)
+            await message.add_reaction(reaction.emoji)
 
             try:
                 await self.wait_for("message", timeout=2, check=check)
@@ -84,7 +86,6 @@ class MainWingman(discord.Client):
             else: # Claimed Successfully
                 await message.channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
                 await self.give(message, user, "$give " + waifu)
-        self.active = False
 
     async def give(self, message, user, command):
         time.sleep(1)

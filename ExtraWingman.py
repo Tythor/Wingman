@@ -33,6 +33,9 @@ class ExtraWingman(discord.Client):
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
 
     async def on_message(self, message):
+        if self.latest_message is None:
+            self.latest_message = message
+
         if message.author == self.user or not message.content[:8] == "$wingman":
             return
 
@@ -40,9 +43,6 @@ class ExtraWingman(discord.Client):
         if (command == "$w" or command == "$h" or command == "$m"
                 or command == "$wg" or command == "$hg" or command == "$mg"
                 or command == "$wa" or command == "$ha" or command == "$ma"):
-            self.latest_message = message
-
-        if self.latest_message is None:
             self.latest_message = message
 
     async def on_reaction_add(self, reaction, user):
@@ -74,7 +74,7 @@ class ExtraWingman(discord.Client):
         message = self.claim_message
         waifu = message.embeds[0].author.name
 
-        print(self.prefix + "Attempting to claim " + waifu)
+        print(self.prefix + "Attempting to claim " + waifu + " for " + user.name)
 
         await message.add_reaction(reaction.emoji)
 
