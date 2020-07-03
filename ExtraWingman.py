@@ -11,12 +11,8 @@ class ExtraWingman(discord.Client):
     loop = asyncio.get_event_loop()
 
     prefix = "TripleFury"
-    ready = False
     active = False
     is_available = True
-
-    latest_message = None
-    claim_message = None
 
     def __init__(self, number):
         self.prefix += str(number) + ": "
@@ -27,51 +23,11 @@ class ExtraWingman(discord.Client):
         print(self.prefix + "Initializing...")
 
     async def on_ready(self):
-        self.ready = True
-
         await self.change_presence(activity=discord.Game("❤️"))
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
 
-    async def on_message(self, message):
-        if self.latest_message is None:
-            self.latest_message = message
-
-        if message.author == self.user or not message.content[:8] == "$wingman":
-            return
-
-        command = message.content[9:]
-        if (command == "$w" or command == "$h" or command == "$m"
-                or command == "$wg" or command == "$hg" or command == "$mg"
-                or command == "$wa" or command == "$ha" or command == "$ma"):
-            self.latest_message = message
-
-    async def on_reaction_add(self, reaction, user):
-        if "TripleFury" in user.name:
-            self.claim_message = reaction.message
-
-    async def give(self, user, command):
-        time.sleep(1)
-
-        waifu = command[6:]
-        msg = await self.latest_message.channel.send("$give " + user.mention + " " + waifu)
-
-        def check(message):
-            return "Who" in message.content
-
-        try:
-            await self.wait_for("message", timeout=2, check=check)
-        except asyncio.TimeoutError:  # Successful
-            print(self.prefix + "Offered " + waifu + " to " + user.name)
-            return True
-        else:  # Unsuccessful
-            await self.latest_message.channel.send("$exit", delete_after=2)
-            time.sleep(1)
-            await msg.delete()
-
-            return False
-
-    async def claim(self, reaction, user):
-        message = self.claim_message
+    async def claim(self, message, reaction, user):
+        channel = self.get_channel(message.channel.id)
         waifu = message.embeds[0].author.name
 
         print(self.prefix + "Attempting to claim " + waifu + " for " + user.name)
@@ -86,21 +42,51 @@ class ExtraWingman(discord.Client):
         except asyncio.TimeoutError:  # Claimed Unsuccessfully
             return False
         else: # Claimed Successfully
-            await message.channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
-            await self.give(user, "$give " + waifu)
+            await channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
+            await self.give(message, user, "$give " + waifu)
             return True
 
-    async def roll(self, command):
+    async def give(self, message, user, command):
+        await asyncio.sleep(1)
+
+        channel = self.get_channel(message.channel.id)
+
+        waifu = command[6:]
+        msg = await channel.send("$give " + user.mention + " " + waifu)
+
+        def check(message):
+            return "Who" in message.content
+
+        try:
+            msg2 = await self.wait_for("message", timeout=2, check=check)
+        except asyncio.TimeoutError: # Successful
+            print(self.prefix + "Offered " + waifu + " to " + user.name)
+            return True
+        else: # Unsuccessful
+            await channel.send("$exit", delete_after=2)
+
+            try:
+                await (await self.wait_for("message", timeout=2)).delete()
+            except asyncio.TimeoutError:
+                pass
+
+            await asyncio.sleep(1)
+            await msg.delete()
+            await msg2.delete()
+
+            return False
+
+    async def roll(self, message, command):
         self.active = True
 
-        author = self.latest_message.author.name
-        message = self.latest_message
+        channel = self.get_channel(message.channel.id)
+        author = message.author.name
 
         print(self.prefix + "Attempting to roll for " + author)
 
         #await message.channel.send("Have no fear **" + author + "**, The Waifu Wingman is here to grant you more rolls!")
 
-        time.sleep(1)
+        await asyncio.sleep(1)
         success = False
 
         while True:
@@ -108,9 +94,9 @@ class ExtraWingman(discord.Client):
 
             if limited in message.content:
                 self.is_available = False
-                author = self.latest_message.author.name
 
                 if not success:
+                    await message.delete()
                     author = "Unknown"
                     # reply = "Looks like you didn't actually get any rolls. Calling for backup..."
 
@@ -119,14 +105,14 @@ class ExtraWingman(discord.Client):
                 break
 
             else:
-                await message.channel.send(command, delete_after=2)
+                await channel.send(command, delete_after=2)
                 try:
                     message = await self.wait_for("message", timeout=5)
                 except asyncio.TimeoutError:
                     print(self.prefix + "Timed out, sending another roll...")
-                    await message.channel.send(command, delete_after=2)
+                    await channel.send(command, delete_after=2)
 
-                time.sleep(random.randint(1, 2))
+                await asyncio.sleep(random.randint(1, 2))
 
                 if message.embeds:
                     success = True
@@ -144,8 +130,8 @@ class ExtraWingman(discord.Client):
             if available_wingmen > 0:
                 reply += " There are **" + str(available_wingmen) + "** more wingmen available. If you would like me to continue rolling, please react to this message!"
             else:
-                reply += " There are no more wingmen available 💔. Please try again in later."
-            message = await message.channel.send(reply)
+                reply += " There are no more wingmen available 💔. Please try again later."
+            message = await channel.send(reply)
 
             if available_wingmen > 0:
                 def check(reaction, user):

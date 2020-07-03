@@ -31,6 +31,7 @@ class MainWingman(discord.Client):
 
         for i in range(4): # up to 4
             self.extra_wingmen.append(ExtraWingman(i + 3))
+
         self.loop.run_forever()
 
     async def on_ready(self):
@@ -50,8 +51,16 @@ class MainWingman(discord.Client):
                 or command == "$wg" or command == "$hg" or command == "$mg"
                 or command == "$wa" or command == "$ha" or command == "$ma"):
             await self.roll(message, command)
-        if "$give" in command:
+        elif "$give" in command:
             await self.give(message, message.author, command)
+        elif "$del" in command:
+            i = 0
+            async for msg in message.channel.history():
+                if i > int(command[4:]):
+                    break
+                else:
+                    await msg.delete()
+                i += 1
 
     async def on_reaction_add(self, reaction, user):
         if not reaction.message.embeds or "Mudamaid" in user.name:
@@ -64,6 +73,9 @@ class MainWingman(discord.Client):
             if user.name == "TripleFury" + str(i):
                 return
 
+        self.loop.create_task(self.claim(reaction, user))
+
+    async def claim(self, reaction, user):
         def check(message):
             return "married" in message.content
 
@@ -88,7 +100,7 @@ class MainWingman(discord.Client):
                 await self.give(message, user, "$give " + waifu)
 
     async def give(self, message, user, command):
-        time.sleep(1)
+        await asyncio.sleep(1)
 
         waifu = command[6:]
         msg = await message.channel.send("$give " + user.mention + " " + waifu)
@@ -97,28 +109,36 @@ class MainWingman(discord.Client):
             return "Who" in message.content
 
         try:
-            await self.wait_for("message", timeout=2, check=check)
+            msg2 = await self.wait_for("message", timeout=2, check=check)
         except asyncio.TimeoutError: # Successful
             print(self.prefix + "Offered " + waifu + " to " + user.name)
         else: # Unsuccessful
             await message.channel.send("$exit", delete_after=2)
-            time.sleep(1)
+
+            try:
+                await (await self.wait_for("message", timeout=2)).delete()
+            except asyncio.TimeoutError:
+                pass
+
+            await asyncio.sleep(1)
             await msg.delete()
+            await msg2.delete()
 
             for extra_wingman in self.extra_wingmen:
-                if await extra_wingman.give(user, command):
+                if await extra_wingman.give(message, user, command):
                     break
 
     async def roll(self, message, command):
         self.active = True
 
+        og_message = message
         author = message.author.name
-        
+
         if self.is_available:
             print(self.prefix + "Attempting to roll for " + author)
-    
+
             await message.channel.send("Have no fear **" + author + "**, The Waifu Wingmen are here to grant you more rolls!")
-            time.sleep(1)
+            await asyncio.sleep(1)
 
         success = False
 
@@ -133,6 +153,7 @@ class MainWingman(discord.Client):
             if limited in message.content:
                 self.is_available = False
                 if not success:
+                    await message.delete()
                     author = "Unknown"
                     # reply = "Looks like you didn't actually get any rolls. Calling for backup..."
 
@@ -148,7 +169,7 @@ class MainWingman(discord.Client):
                     print(self.prefix + "Timed out, sending another roll...")
                     await message.channel.send(command, delete_after=2)
 
-                time.sleep(random.randint(1, 2))
+                await asyncio.sleep(random.randint(1, 2))
 
                 if message.embeds:
                     success = True
@@ -171,10 +192,10 @@ class MainWingman(discord.Client):
             except asyncio.TimeoutError:
                 print(self.prefix + "Reaction timed out")
             else: # Reaction Success
-                await self.call_help(message, command)
+                await self.call_help(og_message, command)
 
         else: # Call for Help
-            await self.call_help(message, command)
+            await self.call_help(og_message, command)
 
         self.active = False
 
@@ -182,13 +203,12 @@ class MainWingman(discord.Client):
         helped = False
         for extra_wingman in self.extra_wingmen:
             if extra_wingman.is_available:
-                helped = True
-                stop_rolling = await extra_wingman.roll(command)
-                if stop_rolling:
+                if await extra_wingman.roll(message, command):
+                    helped = True
                     break
 
         if not helped:
-            time.sleep(1)
+            await asyncio.sleep(1)
             minutes_left = self.timer_time - datetime.datetime.now()
             await message.channel.send("Sorry, looks like all of the wingmen are unavailable 💔. Please try again in **" + str(math.ceil(minutes_left.seconds / 60)) + "** minutes.")
 
@@ -205,3 +225,7 @@ class MainWingman(discord.Client):
         print(self.prefix + "Now Available")
         self.is_available = True
         await self.change_presence(status=discord.Status.online, activity=discord.Game("❤️"))
+
+    # Leaderboard Stuff
+    # my_last_message = await message.channel.history().get(author=self.user)
+    # print(my_last_message.content)
