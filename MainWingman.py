@@ -93,7 +93,7 @@ class MainWingman(discord.Client):
                 await self.wait_for("message", timeout=2, check=check)
             except asyncio.TimeoutError:  # Claimed Unsuccessfully
                 for extra_wingman in self.extra_wingmen:
-                    if await extra_wingman.claim(reaction, user):
+                    if await extra_wingman.claim(message, reaction, user):
                         break
             else: # Claimed Successfully
                 await message.channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
