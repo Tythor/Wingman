@@ -174,6 +174,8 @@ class MainWingman(discord.Client):
                 if message.embeds:
                     success = True
 
+        self.active = False
+
         if success:
             print(self.prefix + "Successfully rolled for " + author)
 
@@ -192,12 +194,11 @@ class MainWingman(discord.Client):
             except asyncio.TimeoutError:
                 print(self.prefix + "Reaction timed out")
             else: # Reaction Success
-                await self.call_help(og_message, command)
+                if not self.active:
+                    await self.call_help(og_message, command)
 
         else: # Call for Help
             await self.call_help(og_message, command)
-
-        self.active = False
 
     async def call_help(self, message, command):
         helped = False

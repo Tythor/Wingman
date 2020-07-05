@@ -11,7 +11,6 @@ class ExtraWingman(discord.Client):
     loop = asyncio.get_event_loop()
 
     prefix = "TripleFury"
-    active = False
     is_available = True
 
     def __init__(self, number):
@@ -28,9 +27,15 @@ class ExtraWingman(discord.Client):
 
     async def claim(self, message, reaction, user):
         channel = self.get_channel(message.channel.id)
+
         waifu = message.embeds[0].author.name
 
         print(self.prefix + "Attempting to claim " + waifu + " for " + user.name)
+
+        async for msg in channel.history(): # Replacement for channel.fetch_message()
+            if msg.embeds and msg.embeds[0].author.name == waifu:
+                message = msg
+                break
 
         await message.add_reaction(reaction.emoji)
 
@@ -77,7 +82,9 @@ class ExtraWingman(discord.Client):
             return False
 
     async def roll(self, message, command):
-        self.active = True
+        from MainWingman import MainWingman
+
+        MainWingman.active = True
 
         channel = self.get_channel(message.channel.id)
         author = message.author.name
@@ -117,23 +124,21 @@ class ExtraWingman(discord.Client):
                 if message.embeds:
                     success = True
 
+        MainWingman.active = False
+
         if success:
             print(self.prefix + "Successfully rolled for " + author)
 
             reply = "Successfully rolled for **" + author + "**!"
             available_wingmen = 0
-
-            from MainWingman import MainWingman
             for extra_wingman in MainWingman.extra_wingmen:
                 if extra_wingman.is_available:
                     available_wingmen += 1
-            if available_wingmen > 0:
-                reply += " There are **" + str(available_wingmen) + "** more wingmen available. If you would like me to continue rolling, please react to this message!"
-            else:
-                reply += " There are no more wingmen available 💔. Please try again later."
-            message = await channel.send(reply)
 
             if available_wingmen > 0:
+                reply += " There are **" + str(available_wingmen) + "** more wingmen available. If you would like me to continue rolling, please react to this message!"
+                message = await channel.send(reply)
+
                 def check(reaction, user):
                     return str(reaction.emoji) == "💖" and reaction.message.content == message.content and user.name == author
 
@@ -143,9 +148,13 @@ class ExtraWingman(discord.Client):
                 except asyncio.TimeoutError:
                     print(self.prefix + "Reaction timed out")
                 else: # Reaction Success
-                    return False
+                    if not MainWingman.active:
+                        return False
 
-        self.active = False
+            else:
+                reply += " There are no more wingmen available 💔. Please try again later."
+                message = await channel.send(reply)
+
         return success
 
     async def set_timer(self, message):
