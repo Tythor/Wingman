@@ -28,14 +28,14 @@ class ExtraWingman(discord.Client):
     async def claim(self, message, reaction, user):
         channel = self.get_channel(message.channel.id)
 
+        async for msg in channel.history(): # Replacement for channel.fetch_message()
+            if msg.id == message.id:
+                message = msg
+                break
+
         waifu = message.embeds[0].author.name
 
         print(self.prefix + "Attempting to claim " + waifu + " for " + user.name)
-
-        async for msg in channel.history(): # Replacement for channel.fetch_message()
-            if msg.embeds and msg.embeds[0].author.name == waifu:
-                message = msg
-                break
 
         await message.add_reaction(reaction.emoji)
 
