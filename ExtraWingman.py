@@ -40,7 +40,7 @@ class ExtraWingman(discord.Client):
         await message.add_reaction(reaction.emoji)
 
         def check(message):
-            return "married" in message.content
+            return "married" in message.content and self.user.name in message.content
 
         try:
             await self.wait_for("message", timeout=2, check=check)

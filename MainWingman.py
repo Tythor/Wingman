@@ -77,10 +77,13 @@ class MainWingman(discord.Client):
 
     async def claim(self, reaction, user):
         def check(message):
-            return "married" in message.content
+            return "married" in message.content and user.name in message.content
+
+        def check2(message):
+            return "married" in message.content and self.user.name in message.content
 
         try:
-            await self.wait_for("message", timeout=2, check=check)
+            await self.wait_for("message", timeout=5, check=check)
         except asyncio.TimeoutError: # Claimed Unsuccessfully
             message = reaction.message
             waifu = message.embeds[0].author.name
@@ -90,7 +93,7 @@ class MainWingman(discord.Client):
             await message.add_reaction(reaction.emoji)
 
             try:
-                await self.wait_for("message", timeout=2, check=check)
+                await self.wait_for("message", timeout=5, check=check2)
             except asyncio.TimeoutError:  # Claimed Unsuccessfully
                 for extra_wingman in self.extra_wingmen:
                     if await extra_wingman.claim(message, reaction, user):
