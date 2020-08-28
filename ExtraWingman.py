@@ -3,7 +3,7 @@ import discord
 import asyncio
 import os
 
-import time
+import datetime
 import random
 
 
@@ -23,7 +23,16 @@ class ExtraWingman(discord.Client):
 
     async def on_ready(self):
         await self.change_presence(activity=discord.Game("❤️"))
+
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
+
+        # Seconds until midnight
+        dt = datetime.datetime.now()
+        await asyncio.sleep(((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second))
+
+        print(self.prefix + "Getting daily kakera")
+        waifu_channel = self.get_channel(720088956938485841)
+        await waifu_channel.send("$dk")
 
     async def claim(self, message, reaction, user):
         channel = self.get_channel(message.channel.id)
@@ -160,7 +169,7 @@ class ExtraWingman(discord.Client):
     async def set_timer(self, message):
         index = message.content.find("min left")
         minutes = int("".join(filter(str.isdigit, message.content[index - 5:index])))
-        seconds = time.strftime("%S", time.localtime())
+        seconds = datetime.datetime.now().second
 
         print(self.prefix + "Unavailable for " + str(minutes) + " minutes")
 

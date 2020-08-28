@@ -3,7 +3,6 @@ import discord
 import asyncio
 import os
 
-import time
 import datetime
 import math
 import random
@@ -41,6 +40,14 @@ class MainWingman(discord.Client):
         await self.change_presence(activity=discord.Game("❤️"))
 
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
+
+        # Seconds until midnight
+        dt = datetime.datetime.now()
+        await asyncio.sleep(((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second))
+
+        print(self.prefix + "Getting daily kakera")
+        waifu_channel = self.get_channel(720088956938485841)
+        await waifu_channel.send("$dk")
 
     async def on_message(self, message):
         if not self.ready or self.active or message.author == self.user or not message.content[:8] == "$wingman":
@@ -219,7 +226,7 @@ class MainWingman(discord.Client):
     async def set_timer(self, message):
         index = message.content.find("min left")
         minutes = int("".join(filter(str.isdigit, message.content[index - 5:index])))
-        seconds = time.strftime("%S", time.localtime())
+        seconds = datetime.datetime.now().second
 
         self.timer_time = datetime.datetime.now() + datetime.timedelta(minutes=minutes)
 
@@ -230,6 +237,7 @@ class MainWingman(discord.Client):
         self.is_available = True
         await self.change_presence(status=discord.Status.online, activity=discord.Game("❤️"))
 
+    # async def add_leaderboard(self, user):
     # Leaderboard Stuff
     # my_last_message = await message.channel.history().get(author=self.user)
     # print(my_last_message.content)
