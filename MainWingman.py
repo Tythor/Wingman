@@ -163,7 +163,7 @@ class MainWingman(discord.Client):
             if limited in message.content:
                 self.is_available = False
                 if not success:
-                    await message.delete()
+                    #await message.delete()
                     author = "Unknown"
                     # reply = "Looks like you didn't actually get any rolls. Calling for backup..."
 
@@ -201,7 +201,7 @@ class MainWingman(discord.Client):
             async def react_roll():
                 try:
                     await message.add_reaction("💖")
-                    self.loop.create_task(self.wait_for("reaction_add", timeout=15, check=check))
+                    #self.loop.create_task(self.wait_for("reaction_add", timeout=15, check=check))
                     await self.wait_for("reaction_add", timeout=15, check=check)
                 except asyncio.TimeoutError:
                     print(self.prefix + "Reaction timed out")
