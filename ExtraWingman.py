@@ -27,8 +27,8 @@ class ExtraWingman(discord.Client):
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
 
         # Seconds until midnight
-        dt = datetime.datetime.now()
-        await asyncio.sleep(((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second))
+        dt = datetime.datetime.utcnow()
+        await asyncio.sleep(((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second) + (2 * int(self.prefix[10])))
 
         print(self.prefix + "Getting daily kakera")
         waifu_channel = self.get_channel(720088956938485841)
@@ -151,14 +151,18 @@ class ExtraWingman(discord.Client):
                 def check(reaction, user):
                     return str(reaction.emoji) == "💖" and reaction.message.content == message.content and user.name == author
 
-                try:
-                    await message.add_reaction("💖")
-                    await self.wait_for("reaction_add", timeout=15, check=check)
-                except asyncio.TimeoutError:
-                    print(self.prefix + "Reaction timed out")
-                else: # Reaction Success
-                    if not MainWingman.active:
-                        return False
+                async def react_roll():
+                    try:
+                        await message.add_reaction("💖")
+                        self.loop.create_task(self.wait_for("reaction_add", timeout=15, check=check))
+                        await self.wait_for("reaction_add", timeout=15, check=check)
+                    except asyncio.TimeoutError:
+                        print(self.prefix + "Reaction timed out")
+                    else: # Reaction Success
+                        if not MainWingman.active:
+                            return False
+
+                self.loop.create_task(react_roll())
 
             else:
                 reply += " There are no more wingmen available 💔. Please try again later."

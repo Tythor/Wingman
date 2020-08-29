@@ -42,7 +42,7 @@ class MainWingman(discord.Client):
         print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
 
         # Seconds until midnight
-        dt = datetime.datetime.now()
+        dt = datetime.datetime.utcnow()
         await asyncio.sleep(((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second))
 
         print(self.prefix + "Getting daily kakera")
@@ -198,14 +198,18 @@ class MainWingman(discord.Client):
             def check(reaction, user):
                 return str(reaction.emoji) == "💖" and reaction.message.content == message.content and user.name == author
 
-            try:
-                await message.add_reaction("💖")
-                await self.wait_for("reaction_add", timeout=15, check=check)
-            except asyncio.TimeoutError:
-                print(self.prefix + "Reaction timed out")
-            else: # Reaction Success
-                if not self.active:
-                    await self.call_help(og_message, command)
+            async def react_roll():
+                try:
+                    await message.add_reaction("💖")
+                    self.loop.create_task(self.wait_for("reaction_add", timeout=15, check=check))
+                    await self.wait_for("reaction_add", timeout=15, check=check)
+                except asyncio.TimeoutError:
+                    print(self.prefix + "Reaction timed out")
+                else:  # Reaction Success
+                    if not self.active:
+                        await self.call_help(og_message, command)
+
+            self.loop.create_task(react_roll())
 
         else: # Call for Help
             await self.call_help(og_message, command)
