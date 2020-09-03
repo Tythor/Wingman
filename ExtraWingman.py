@@ -151,15 +151,18 @@ class ExtraWingman(discord.Client):
                 def check(reaction, user):
                     return str(reaction.emoji) == "💖" and reaction.message.content == message.content and user.name == author
 
-                try:
-                    await message.add_reaction("💖")
-                    #self.loop.create_task(self.wait_for("reaction_add", timeout=15, check=check))
-                    await self.wait_for("reaction_add", timeout=15, check=check)
-                except asyncio.TimeoutError:
-                    print(self.prefix + "Reaction timed out")
-                else: # Reaction Success
-                    if not MainWingman.active:
-                        return False
+                async def react_roll():
+                    try:
+                        await message.add_reaction("💖")
+                        await self.wait_for("reaction_add", timeout=15, check=check)
+                    except asyncio.TimeoutError:
+                        print(self.prefix + "Reaction timed out")
+                    else: # Reaction Success
+                        if not MainWingman.active:
+                            return False
+                    return True
+
+                success = self.loop.create_task(react_roll())
 
             else:
                 reply += " There are no more wingmen available 💔. Please try again later."

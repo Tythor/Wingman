@@ -201,7 +201,6 @@ class MainWingman(discord.Client):
             async def react_roll():
                 try:
                     await message.add_reaction("💖")
-                    #self.loop.create_task(self.wait_for("reaction_add", timeout=15, check=check))
                     await self.wait_for("reaction_add", timeout=15, check=check)
                 except asyncio.TimeoutError:
                     print(self.prefix + "Reaction timed out")
