@@ -50,7 +50,7 @@ class MainWingman(discord.Client):
         await waifu_channel.send("$dk")
 
     async def on_message(self, message):
-        if not self.ready or self.active or message.author == self.user or not message.content[:8] == "$wingman":
+        if not self.ready or self.active or message.author == self.user or not message.content.startswith("$wingman"):
             return
 
         command = message.content[9:]
@@ -70,7 +70,7 @@ class MainWingman(discord.Client):
                 i += 1
 
     async def on_reaction_add(self, reaction, user):
-        if not reaction.message.embeds or "Mudamaid" in user.name:
+        if not reaction.message.embeds or "Mudamaid" in user.name or "Mudae" in user.name:
             return
 
         if not (reaction.emoji == "❤️" or reaction.emoji == "💖" or reaction.emoji == "💘" or reaction.emoji == "💓" or reaction.emoji == "💗" or reaction.emoji == "💕"):
@@ -240,7 +240,8 @@ class MainWingman(discord.Client):
         self.is_available = True
         await self.change_presence(status=discord.Status.online, activity=discord.Game("❤️"))
 
-    # async def add_leaderboard(self, user):
-    # Leaderboard Stuff
-    # my_last_message = await message.channel.history().get(author=self.user)
-    # print(my_last_message.content)
+    async def add_leaderboard(self, user):
+        # Leaderboard Stuff
+        leaderboard_channel = self.get_channel(720106456724013128)
+        my_last_message = await leaderboard_channel.history().get(author=self.user)
+        # print(my_last_message.content)

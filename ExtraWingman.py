@@ -162,7 +162,7 @@ class ExtraWingman(discord.Client):
                             return False
                     return True
 
-                success = self.loop.create_task(react_roll())
+                success = await react_roll()
 
             else:
                 reply += " There are no more wingmen available 💔. Please try again later."
