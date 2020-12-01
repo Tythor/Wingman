@@ -16,15 +16,13 @@ class MainWingman(discord.Client):
     prefix = "TripleFury2: "
     ready = False
     active = False
-    is_available = True
+    is_available = {}
 
     timer_time = None
     extra_wingmen = []
 
-
     def __init__(self):
         self.loop.create_task(self.start(os.getenv("token"), bot=False))
-
         super().__init__()
         print(self.prefix + "Initializing...")
 
@@ -52,6 +50,13 @@ class MainWingman(discord.Client):
     async def on_message(self, message):
         if not self.ready or self.active or message.author == self.user or not message.content.startswith("$wingman"):
             return
+
+        if message.guild.id not in self.is_available:
+            self.is_available[message.guild.id] = True
+
+        for extra_wingman in self.extra_wingmen:
+            if message.guild.id not in extra_wingman.is_available:
+                extra_wingman.is_available[message.guild.id] = True
 
         command = message.content[9:]
         if (command == "$w" or command == "$h" or command == "$m"
@@ -81,6 +86,7 @@ class MainWingman(discord.Client):
                 return
 
         self.loop.create_task(self.claim(reaction, user))
+        # stop adding tasks after adding the first one
 
     async def claim(self, reaction, user):
         def check(message):
@@ -144,7 +150,7 @@ class MainWingman(discord.Client):
         og_message = message
         author = message.author.name
 
-        if self.is_available:
+        if self.is_available[message.guild.id]:
             print(self.prefix + "Attempting to roll for " + author)
 
             await message.channel.send("Have no fear **" + author + "**, The Waifu Wingmen are here to grant you more rolls!")
@@ -152,7 +158,7 @@ class MainWingman(discord.Client):
 
         success = False
 
-        while True and self.is_available:
+        while True and self.is_available[message.guild.id]:
             limited = "**" + self.user.name + "**, the roulette is limited"
             disabled = "Command DISABLED"
             restricted = "Command RESTRICTED"
@@ -161,7 +167,7 @@ class MainWingman(discord.Client):
                 return
 
             if limited in message.content:
-                self.is_available = False
+                self.is_available[message.guild.id] = False
                 if not success:
                     #await message.delete()
                     author = "Unknown"
@@ -189,9 +195,10 @@ class MainWingman(discord.Client):
         if success:
             print(self.prefix + "Successfully rolled for " + author)
 
+            # Update wingmen availability
             available_wingmen = 0
             for extra_wingman in self.extra_wingmen:
-                if extra_wingman.is_available:
+                if extra_wingman.is_available[message.guild.id]:
                     available_wingmen += 1
             message = await message.channel.send("Successfully rolled for **" + author + "**! There are **" + str(available_wingmen) + "** more wingmen available. If you would like me to continue rolling, please react to this message!")
 
@@ -216,7 +223,7 @@ class MainWingman(discord.Client):
     async def call_help(self, message, command):
         helped = False
         for extra_wingman in self.extra_wingmen:
-            if extra_wingman.is_available:
+            if extra_wingman.is_available[message.guild.id]:
                 if await extra_wingman.roll(message, command):
                     helped = True
                     break
@@ -237,7 +244,7 @@ class MainWingman(discord.Client):
 
         await asyncio.sleep(minutes * 60 - int(seconds))
         print(self.prefix + "Now Available")
-        self.is_available = True
+        self.is_available[message.guild.id] = True
         await self.change_presence(status=discord.Status.online, activity=discord.Game("❤️"))
 
     async def add_leaderboard(self, user):

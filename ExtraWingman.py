@@ -10,14 +10,11 @@ import random
 class ExtraWingman(discord.Client):
     loop = asyncio.get_event_loop()
 
-    prefix = "TripleFury"
-    is_available = True
-
     def __init__(self, number):
-        self.prefix += str(number) + ": "
+        self.prefix = "TripleFury" + str(number) + ": "
+        self.is_available = {}
 
         self.loop.create_task(self.start(os.getenv("token" + str(number - 1)), bot=False))
-
         super().__init__()
         print(self.prefix + "Initializing...")
 
@@ -109,7 +106,7 @@ class ExtraWingman(discord.Client):
             limited = "**" + self.user.name + "**, the roulette is limited"
 
             if limited in message.content:
-                self.is_available = False
+                self.is_available[message.guild.id] = False
 
                 if not success:
                     #await message.delete()
@@ -141,7 +138,7 @@ class ExtraWingman(discord.Client):
             reply = "Successfully rolled for **" + author + "**!"
             available_wingmen = 0
             for extra_wingman in MainWingman.extra_wingmen:
-                if extra_wingman.is_available:
+                if extra_wingman.is_available[message.guild.id]:
                     available_wingmen += 1
 
             if available_wingmen > 0:
@@ -179,5 +176,5 @@ class ExtraWingman(discord.Client):
 
         await asyncio.sleep(minutes * 60 - int(seconds))
         print(self.prefix + "Now Available")
-        self.is_available = True
+        self.is_available[message.guild.id] = True
         await self.change_presence(status=discord.Status.online, activity=discord.Game("❤️"))
