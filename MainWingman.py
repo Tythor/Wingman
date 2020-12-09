@@ -78,7 +78,7 @@ class MainWingman(discord.Client):
         if not reaction.message.embeds or "Mudamaid" in user.name or "Mudae" in user.name:
             return
 
-        if not (reaction.emoji == "❤️" or reaction.emoji == "💖" or reaction.emoji == "💘" or reaction.emoji == "💓" or reaction.emoji == "💗" or reaction.emoji == "💕"):
+        if reaction.emoji not in ["❤️", "♥️", "💖", "💘", "💓", "💗", "💕"]:
             return
 
         for i in range(2, 7):
@@ -157,9 +157,10 @@ class MainWingman(discord.Client):
             await asyncio.sleep(1)
 
         success = False
+        available = self.is_available[message.guild.id]
 
         #while self.is_available[message.guild.id]:
-        while True:
+        while available:
             limited = "**" + self.user.name + "**, the roulette is limited"
             disabled = "Command DISABLED"
             restricted = "Command RESTRICTED"
@@ -213,8 +214,8 @@ class MainWingman(discord.Client):
                 except asyncio.TimeoutError:
                     print(self.prefix + "Reaction timed out")
                 else:  # Reaction Success
-                    #if not self.active:
-                    await self.call_help(og_message, command)
+                    if not self.active:
+                        await self.call_help(og_message, command)
 
             self.loop.create_task(react_roll())
 

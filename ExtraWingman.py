@@ -155,8 +155,8 @@ class ExtraWingman(discord.Client):
                     except asyncio.TimeoutError:
                         print(self.prefix + "Reaction timed out")
                     else: # Reaction Success
-                        #if not MainWingman.active:
-                        return False
+                        if not MainWingman.active:
+                            return False
                     return True
 
                 success = await react_roll()
