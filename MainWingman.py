@@ -158,12 +158,8 @@ class MainWingman(discord.Client):
 
         success = False
 
-        # snowsgiving
-
-
-        while self.is_available[message.guild.id]:
-            if message.guild.id == 763843291094712351:
-                return
+        #while self.is_available[message.guild.id]:
+        while True:
             limited = "**" + self.user.name + "**, the roulette is limited"
             disabled = "Command DISABLED"
             restricted = "Command RESTRICTED"
