@@ -158,7 +158,7 @@ class MainWingman(discord.Client):
 
         success = False
 
-        while self.is_available[message.guild.id]:
+        while self.is_available[og_message.guild.id]:
             limited = "**" + self.user.name + "**, the roulette is limited"
             disabled = "Command DISABLED"
             restricted = "Command RESTRICTED"
@@ -221,6 +221,7 @@ class MainWingman(discord.Client):
             await self.call_help(og_message, command)
 
     async def call_help(self, message, command):
+        self.active = True
         helped = False
         for extra_wingman in self.extra_wingmen:
             if extra_wingman.is_available[message.guild.id]:
@@ -232,6 +233,8 @@ class MainWingman(discord.Client):
             await asyncio.sleep(1)
             minutes_left = self.timer_time - datetime.datetime.now()
             await message.channel.send("Sorry, looks like all of the wingmen are unavailable 💔. Please try again in **" + str(math.ceil(minutes_left.seconds / 60)) + "** minutes.")
+
+        self.active = False
 
     async def set_timer(self, message):
         index = message.content.find("min left")
