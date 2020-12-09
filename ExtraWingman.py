@@ -12,6 +12,7 @@ class ExtraWingman(discord.Client):
 
     def __init__(self, number):
         self.prefix = "TripleFury" + str(number) + ": "
+        self.active = False
         self.is_available = {}
 
         self.loop.create_task(self.start(os.getenv("token" + str(number - 1)), bot=False))
@@ -88,9 +89,7 @@ class ExtraWingman(discord.Client):
             return False
 
     async def roll(self, message, command):
-        from MainWingman import MainWingman
-
-        MainWingman.active = True
+        self.active = True
 
         channel = self.get_channel(message.channel.id)
         author = message.author.name
@@ -102,7 +101,7 @@ class ExtraWingman(discord.Client):
         await asyncio.sleep(1)
         success = False
 
-        while True:
+        while self.is_available[message.guild.id]:
             limited = "**" + self.user.name + "**, the roulette is limited"
 
             if limited in message.content:
@@ -130,13 +129,14 @@ class ExtraWingman(discord.Client):
                 if message.embeds:
                     success = True
 
-        MainWingman.active = False
-
         if success:
-            print(self.prefix + "Successfully rolled for " + author)
+            self.active = False
 
+            print(self.prefix + "Successfully rolled for " + author)
             reply = "Successfully rolled for **" + author + "**!"
+
             available_wingmen = 0
+            from MainWingman import MainWingman
             for extra_wingman in MainWingman.extra_wingmen:
                 if extra_wingman.is_available[message.guild.id]:
                     available_wingmen += 1
@@ -155,7 +155,7 @@ class ExtraWingman(discord.Client):
                     except asyncio.TimeoutError:
                         print(self.prefix + "Reaction timed out")
                     else: # Reaction Success
-                        if not MainWingman.active:
+                        if not self.active:
                             return False
                     return True
 

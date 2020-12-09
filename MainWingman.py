@@ -192,9 +192,11 @@ class MainWingman(discord.Client):
                 if message.embeds:
                     success = True
 
-        self.active = False
+
 
         if success:
+            self.active = False
+
             print(self.prefix + "Successfully rolled for " + author)
 
             # Update wingmen availability
@@ -223,10 +225,10 @@ class MainWingman(discord.Client):
             await self.call_help(og_message, command)
 
     async def call_help(self, message, command):
-        self.active = True
         helped = False
+
         for extra_wingman in self.extra_wingmen:
-            if extra_wingman.is_available[message.guild.id]:
+            if extra_wingman.is_available[message.guild.id] and extra_wingman.get_guild(message.guild.id) is not None:
                 if await extra_wingman.roll(message, command):
                     helped = True
                     break
