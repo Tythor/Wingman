@@ -51,10 +51,6 @@ class MainWingman(discord.Client):
         if not self.ready or self.active or message.author == self.user or not message.content.startswith("$wingman"):
             return
 
-        #snowsgiving
-        if message.guild.id == 763843291094712351:
-            return
-
         if message.guild.id not in self.is_available:
             self.is_available[message.guild.id] = True
 
@@ -162,7 +158,12 @@ class MainWingman(discord.Client):
 
         success = False
 
+        # snowsgiving
+
+
         while self.is_available[message.guild.id]:
+            if message.guild.id == 763843291094712351:
+                return
             limited = "**" + self.user.name + "**, the roulette is limited"
             disabled = "Command DISABLED"
             restricted = "Command RESTRICTED"
@@ -206,18 +207,18 @@ class MainWingman(discord.Client):
                     available_wingmen += 1
             message = await message.channel.send("Successfully rolled for **" + author + "**! There are **" + str(available_wingmen) + "** more wingmen available. If you would like me to continue rolling, please react to this message!")
 
-            def check(reaction, user):
-                return str(reaction.emoji) == "💖" and reaction.message.content == message.content and user.name == author
-
             async def react_roll():
                 try:
                     await message.add_reaction("💖")
+
+                    def check(reaction, user):
+                        return str(reaction.emoji) == "💖" and reaction.message.content == message.content and user.name == author
                     await self.wait_for("reaction_add", timeout=15, check=check)
                 except asyncio.TimeoutError:
                     print(self.prefix + "Reaction timed out")
                 else:  # Reaction Success
-                    if not self.active:
-                        await self.call_help(og_message, command)
+                    #if not self.active:
+                    await self.call_help(og_message, command)
 
             self.loop.create_task(react_roll())
 

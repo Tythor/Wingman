@@ -145,18 +145,18 @@ class ExtraWingman(discord.Client):
                 reply += " There are **" + str(available_wingmen) + "** more wingmen available. If you would like me to continue rolling, please react to this message!"
                 message = await channel.send(reply)
 
-                def check(reaction, user):
-                    return str(reaction.emoji) == "💖" and reaction.message.content == message.content and user.name == author
-
                 async def react_roll():
                     try:
                         await message.add_reaction("💖")
+
+                        def check(reaction, user):
+                            return str(reaction.emoji) == "💖" and reaction.message.content == message.content and user.name == author
                         await self.wait_for("reaction_add", timeout=15, check=check)
                     except asyncio.TimeoutError:
                         print(self.prefix + "Reaction timed out")
                     else: # Reaction Success
-                        if not MainWingman.active:
-                            return False
+                        #if not MainWingman.active:
+                        return False
                     return True
 
                 success = await react_roll()
