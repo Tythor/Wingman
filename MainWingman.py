@@ -158,7 +158,7 @@ class MainWingman(discord.Client):
 
         success = False
 
-        while True and self.is_available[message.guild.id]:
+        while self.is_available[message.guild.id]:
             limited = "**" + self.user.name + "**, the roulette is limited"
             disabled = "Command DISABLED"
             restricted = "Command RESTRICTED"
