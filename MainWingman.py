@@ -51,6 +51,10 @@ class MainWingman(discord.Client):
         if not self.ready or self.active or message.author == self.user or not message.content.startswith("$wingman"):
             return
 
+        #snowsgiving
+        if message.guild.id == 763843291094712351:
+            return
+
         if message.guild.id not in self.is_available:
             self.is_available[message.guild.id] = True
 
@@ -158,7 +162,7 @@ class MainWingman(discord.Client):
 
         success = False
 
-        while self.is_available[og_message.guild.id]:
+        while self.is_available[message.guild.id]:
             limited = "**" + self.user.name + "**, the roulette is limited"
             disabled = "Command DISABLED"
             restricted = "Command RESTRICTED"
