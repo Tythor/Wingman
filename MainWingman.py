@@ -59,9 +59,7 @@ class MainWingman(discord.Client):
                 extra_wingman.is_available[message.guild.id] = True
 
         command = message.content[9:]
-        if (command == "$w" or command == "$h" or command == "$m"
-                or command == "$wg" or command == "$hg" or command == "$mg"
-                or command == "$wa" or command == "$ha" or command == "$ma"):
+        if ["$w", "$h", "$m", "$wg", "$hg", "$mg", "$wa", "$ha", "$ma"] in command:
             await self.roll(message, command)
         elif "$give" in command:
             await self.give(message, message.author, command)
@@ -70,8 +68,7 @@ class MainWingman(discord.Client):
             async for msg in message.channel.history():
                 if i > int(command[4:]):
                     break
-                else:
-                    await msg.delete()
+                await msg.delete()
                 i += 1
 
     async def on_reaction_add(self, reaction, user):
@@ -192,8 +189,6 @@ class MainWingman(discord.Client):
                 if message.embeds:
                     success = True
 
-
-
         if success:
             self.active = False
 
@@ -226,7 +221,6 @@ class MainWingman(discord.Client):
 
     async def call_help(self, message, command):
         helped = False
-
         for extra_wingman in self.extra_wingmen:
             if extra_wingman.is_available[message.guild.id] and extra_wingman.get_guild(message.guild.id) is not None:
                 if await extra_wingman.roll(message, command):
