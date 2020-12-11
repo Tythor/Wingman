@@ -37,6 +37,8 @@ class MainWingman(Wingman):
             await self.give_cmd(message, message.author, command)
         elif "$del" in command:
             await self.delete_cmd(message, command)
+        elif "$leaderboard" in command:
+            await message.channel.send((await self.get_channel(720106456724013128).history().get(author=self.user)).content)
 
     async def on_reaction_add(self, reaction, user):
         if not reaction.message.embeds or "Mudamaid" in user.name or "Mudae" in user.name:
@@ -125,7 +127,7 @@ class MainWingman(Wingman):
         for leader in leaders:
             total += leaders[leader]
 
-        final = "**Total Wingman Rolls**: `" + str(total) + "` ```"
+        final = "**Total Wingman Rolls**: `" + str(total) + "` ```\n"
 
         i = 0
         for leader in leaders:
