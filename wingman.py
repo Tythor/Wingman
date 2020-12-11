@@ -138,6 +138,8 @@ class Wingman(discord.Client):
         if success:
             MainWingman.is_active[guild_id] = False
 
+            await MainWingman.add_leaderboard(MainWingman.extra_wingmen[0], message.author)
+
             print(self.prefix + "Successfully rolled for " + author)
             reply = "Successfully rolled for **" + author + "**!"
 

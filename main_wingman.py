@@ -90,7 +90,6 @@ class MainWingman(Wingman):
         for extra_wingman in self.extra_wingmen:
             if extra_wingman.is_available[guild_id] and extra_wingman.get_guild(guild_id) is not None:
                 if await extra_wingman.roll(message, command):
-                    await self.add_leaderboard(message.author)
                     helped = True
                     break
 
