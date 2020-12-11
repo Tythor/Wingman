@@ -88,6 +88,7 @@ class MainWingman(Wingman):
         for extra_wingman in self.extra_wingmen:
             if extra_wingman.is_available[guild_id] and extra_wingman.get_guild(guild_id) is not None:
                 if await extra_wingman.roll(message, command):
+                    await self.add_leaderboard(message.author)
                     helped = True
                     break
 
@@ -99,7 +100,38 @@ class MainWingman(Wingman):
         self.is_active[guild_id] = False
 
     async def add_leaderboard(self, user):
-        # Leaderboard Stuff
         leaderboard_channel = self.get_channel(720106456724013128)
-        my_last_message = await leaderboard_channel.history().get(author=self.user)
-        # print(my_last_message.content)
+        message = await leaderboard_channel.history().get(author=self.user)
+        message_lines = message.content.splitlines()
+
+        leaders = {}
+
+        for line in message_lines:
+            if ")" in line:
+                line_split = line.split(":")
+                leaders[line_split[0].split(") ")[1]] = int(line_split[1])
+
+        if user.name in leaders:
+            leaders[user.name] += 1
+        else:
+            leaders[user.name] = 1
+
+        sorted_leaders = {}
+        for i in sorted(leaders, key=leaders.get, reverse=True):
+            sorted_leaders[i] = leaders[i]
+        leaders = sorted_leaders
+
+        total = 0
+        for leader in leaders:
+            total += leaders[leader]
+
+        final = "**Total Wingman Rolls**: `" + str(total) + "` ```"
+
+        i = 0
+        for leader in leaders:
+            i += 1
+            final += "{}) {}: {}\n".format(i, leader, str(leaders[leader]))
+
+        final += "```"
+
+        await message.edit(content=final)
