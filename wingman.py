@@ -1,124 +1,187 @@
 import discord
-import aiohttp
-
-import time
-import random
+import asyncio
 import os
+import datetime
+import random
 
-# from discord.ext import command
 
 class Wingman(discord.Client):
-    def __init__(self):
-        self.ready = False
-        self.active = False
+    loop = asyncio.get_event_loop()
+
+    def __init__(self, number):
+        self.prefix = "TripleFury" + str(number + 1) + ": "
+        self.is_available = {}
+
+        self.loop.create_task(self.start(os.getenv("token" + str(number)), bot=False))
         super().__init__()
-        print("Starting...")
-
-    def run(self):
-        token = os.getenv("token")
-        super().run(token, bot=False)
-
-    async def roll(self, message, command):
-        if not self.active:
-            self.active = True
-            print("Rolling for " + message.author.name)
-            await message.channel.send("Have no fear, The Waifu Wingman is here to grant you more rolls!")
-
-            msg = None
-            time.sleep(1)
-
-            while True:
-                keyword = self.user.name + ", the roulette is limited"
-                if msg is not None and keyword in msg.content:
-                    await message.channel.send("It appears that I am out of rolls. Please try again later.")
-                    break
-                else:
-                    await message.channel.send(command)
-                    msg = await self.wait_for("message")
-                    time.sleep(random.randint(1, 2))
-            self.active = False
-
-
-    # @command()
-    # async def wingman(self, message, arg):
-    #    print("apsoidjfaposid")
-    #    self.roll(message, arg)
-
-    async def on_message(self, message):
-        if message.content == "$wingman $w":
-            await self.roll(message, "$w")
-        elif message.content == "$wingman $h":
-            await self.roll(message, "$h")
-        elif message.content == "$wingman $m":
-            await self.roll(message, "$m")
-
-        if not self.ready:
-            return
-        """"
-        # SelfBot Commands
-        prefix_checks = [
-            message.content.startswith(self.prefix),
-            message.author.id == self.user.id
-        ]
-        if all(prefix_checks):
-            def arg_check(arg):
-                str_mentions = [str(mention) for mention in raw_mentions]
-                if not raw_mentions:
-                    return True
-                checks = [
-                    raw_mentions,
-                    arg != '',
-                    arg.replace('<@', '').replace('>', '') not in str_mentions
-                ]
-                return all(checks)
-
-            raw_mentions = message.raw_mentions or None
-            detokenized = message.content.split(' ')
-            cmd = detokenized[0]
-            args = []
-            if len(detokenized) > 1:
-                if raw_mentions:
-                    args = [
-                        arg for arg in detokenized[1:] if arg_check(arg)
-                    ]
-                else:
-                    args = [arg for arg in detokenized[1:] if arg != '']
-            cmd = cmd.replace(self.prefix, 'cmd_').lower()
-            try:
-                method = self.__getattribute__(cmd)
-            except AttributeError:  # Not a selfbot command, so execute it as a PokeCord command.
-                cmd = cmd.replace('cmd_', '')
-                args.insert(0, cmd)
-                method = self.cmd_poke_exec
-            kwargs = {
-                'message': message,
-                'args': args,
-                'mentions': []
-            }
-            if message.mentions:
-                kwargs['mentions'] = message.mentions
-            required = inspect.signature(method)
-            required = set(required.parameters.copy())
-            for key in list(kwargs):
-                if key not in required:
-                    kwargs.pop(key, None)
-            if required == set(kwargs):
-                await method(**kwargs)
-        """
-
-    async def cmd_autolog(self, message, args=[]):
-        if args:
-            if args[0].lower() == 'off':
-                self.autolog = False
-                print('Disabled Autologger.\n')
-            elif args[0].lower() == 'on':
-                self.autolog = True
-                print('Enabled Autologger.\n')
-            else:
-                print(args)
+        print(self.prefix + "Initializing...")
 
     async def on_ready(self):
-        self.sess = aiohttp.ClientSession(loop=self.loop)
-        self.ready = True
-        await self.change_presence(status=discord.Status.online, activity=discord.Game("$wingman $w | $h | $m"))
-        print("Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
+        #await self.change_presence(activity=discord.Game("$wingman $w | $h | $m"))
+        await self.change_presence(activity=discord.Game("❤️"))
+
+        print(self.prefix + "Logged in as " + self.user.name + " (" + str(self.user.id) + ")")
+
+        # Seconds until midnight
+        dt = datetime.datetime.utcnow()
+        await asyncio.sleep(((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second) + (2 * int(self.prefix[10])))
+
+        print(self.prefix + "Getting daily kakera")
+        waifu_channel = self.get_channel(720088956938485841)
+        await waifu_channel.send("$dk")
+
+    async def claim(self, message, reaction, user):
+        channel = self.get_channel(message.channel.id)
+
+        async for msg in channel.history(): # Replacement for channel.fetch_message()
+            if msg.id == message.id:
+                message = msg
+                break
+
+        waifu = message.embeds[0].author.name
+
+        print(self.prefix + "Attempting to claim " + waifu + " for " + user.name)
+
+        await message.add_reaction(reaction.emoji)
+
+        def check(message):
+            return "married" in message.content and self.user.name in message.content
+
+        try:
+            await self.wait_for("message", timeout=2, check=check)
+        except asyncio.TimeoutError:  # Claimed Unsuccessfully
+            return False
+        else: # Claimed Successfully
+            await channel.send("Successfully claimed **" + waifu + "** for **" + user.name + "**! Use $wingman $give <character> to receive your claim!")
+            await self.give(message, user, "$give " + waifu)
+            return True
+
+    async def give(self, message, user, command):
+        channel = self.get_channel(message.channel.id)
+
+        await asyncio.sleep(1)
+
+        waifu = command[6:]
+        msg = await channel.send("$give " + user.mention + " " + waifu)
+
+        def check(message):
+            return "Who" in message.content
+
+        try:
+            msg2 = await self.wait_for("message", timeout=2, check=check)
+        except asyncio.TimeoutError: # Successful
+            print(self.prefix + "Offered " + waifu + " to " + user.name)
+            return True
+        else: # Unsuccessful
+            await channel.send("$exit", delete_after=2)
+
+            try:
+                await (await self.wait_for("message", timeout=2)).delete()
+            except asyncio.TimeoutError:
+                pass
+
+            await asyncio.sleep(1)
+            await msg.delete()
+            await msg2.delete()
+
+            return False
+
+    async def roll(self, message, command):
+        channel = self.get_channel(message.channel.id)
+        guild_id = message.guild.id
+
+        from main_wingman import MainWingman
+        MainWingman.is_active[guild_id] = True
+
+        author = message.author.name
+        og_message = message
+        success = False
+
+        print(self.prefix + "Attempting to roll for " + author + " in " + message.guild.name)
+
+        await asyncio.sleep(1)
+
+        while self.is_available[guild_id]:
+            limited = "**" + self.user.name + "**, the roulette is limited"
+            disabled = "Command DISABLED"
+            restricted = "Command RESTRICTED"
+
+            if disabled in message.content or restricted in message.content:
+                return True
+
+            if limited in message.content:
+                self.is_available[guild_id] = False
+
+                if not success:
+                    author = "Unknown"
+                    # reply = "Looks like you didn't actually get any rolls. Calling for backup..."
+
+                await self.change_presence(status=discord.Status.dnd, activity=discord.Game("💔 by " + author))
+                self.loop.create_task(self.set_timer(message))
+                break
+
+            else:
+                await channel.send(command, delete_after=2)
+                try:
+                    message = await self.wait_for("message", timeout=5)
+                except asyncio.TimeoutError:
+                    print(self.prefix + "Timed out, sending another roll...")
+                    await channel.send(command, delete_after=2)
+
+                await asyncio.sleep(random.randint(1, 2))
+
+                if message.embeds:
+                    success = True
+                    #self.is_available[guild_id] = False
+                    #break
+
+        if success:
+            MainWingman.is_active[guild_id] = False
+
+            print(self.prefix + "Successfully rolled for " + author)
+            reply = "Successfully rolled for **" + author + "**!"
+
+            available_wingmen = 0
+            for extra_wingman in MainWingman.extra_wingmen:
+                if extra_wingman.is_available[guild_id]:
+                    available_wingmen += 1
+
+            if available_wingmen > 0:
+                reply += " There are **" + str(available_wingmen) + "** more wingmen available. If you would like me to continue rolling, please react to this message!"
+                message = await channel.send(reply)
+
+                async def react_roll():
+                    try:
+                        await message.add_reaction("💖")
+
+                        def check(reaction, user):
+                            return str(reaction.emoji) == "💖" and reaction.message.content == message.content and user.name == author
+                        await self.wait_for("reaction_add", timeout=15, check=check)
+                    except asyncio.TimeoutError:
+                        print(self.prefix + "Reaction timed out")
+                    else: # Reaction Success
+                        if not MainWingman.is_active[guild_id]:
+                            await MainWingman.roll_cmd(MainWingman.extra_wingmen[0], og_message, command)
+
+                self.loop.create_task(react_roll())
+
+            else:
+                reply += " There are no more wingmen available 💔. Please try again later."
+                message = await channel.send(reply)
+
+        return success
+
+    async def set_timer(self, message):
+        index = message.content.find("min left")
+        minutes = int("".join(filter(str.isdigit, message.content[index - 5:index])))
+        seconds = datetime.datetime.now().second
+
+        from main_wingman import MainWingman
+        MainWingman.timer_time = datetime.datetime.now() + datetime.timedelta(minutes=minutes)
+
+        print(self.prefix + "Unavailable for " + str(minutes) + " minutes")
+
+        await asyncio.sleep(minutes * 60 - int(seconds))
+        print(self.prefix + "Now Available")
+        self.is_available[message.guild.id] = True
+        await self.change_presence(status=discord.Status.online, activity=discord.Game("❤️"))

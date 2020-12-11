@@ -1,4 +1,14 @@
-from MainWingman import MainWingman
+import asyncio
+
+from main_wingman import MainWingman
+from wingman import Wingman
 
 if __name__ == "__main__":
-    bot = MainWingman()
+    extra_wingmen = []
+
+    extra_wingmen.append(MainWingman(extra_wingmen))
+
+    for i in range(1, 5):
+        extra_wingmen.append(Wingman(i + 1))
+
+    asyncio.get_event_loop().run_forever()
