@@ -136,3 +136,7 @@ class MainWingman(Wingman):
         final += "```"
 
         await message.edit(content=final)
+
+        leaderboard_channel = self.get_channel(720802906814808164)
+        message = await leaderboard_channel.history().get(author=self.user)
+        await message.edit(content=final)
