@@ -87,6 +87,9 @@ class Wingman(discord.Client):
             return False
 
     async def roll(self, message, command):
+        if self.prefix == "TripleFury4: ":
+            return False
+
         channel = self.get_channel(message.channel.id)
         guild_id = message.guild.id
 
